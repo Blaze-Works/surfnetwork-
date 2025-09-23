@@ -135,7 +135,7 @@ class User:
                         {
                             "type": "table",
                             "content": [
-                                {"type": "image", "content": "image/logo.png"},
+                                # {"type": "image", "content": "image/logo.png"},
                                 {"type": "header", "content": "Verify Your Email Address"},
                                 {"type": "text", "content": "We just need to verify your email address to activate your SurfNetwork account. Here's your verification code:"},
                                 {"type": "html", "content": code_html},
@@ -242,7 +242,7 @@ class User:
                     {
                         "type": "table",
                         "content": [
-                            {"type": "image", "content": "image/logo.png"},
+                            # {"type": "image", "content": "image/logo.png"},
                             {"type": "header", "content": "Reset Your Password"},
                             {"type": "text", "content": "We just need to verify it you before you can reset your password, here's your reset code:"},
                             {"type": "html", "content": code_html},
