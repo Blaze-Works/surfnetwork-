@@ -1,12 +1,11 @@
 # app/core/utils.py
 
-from fastapi import UploadFile, File, HTTPException
+from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from app.core.mail import send_html_email
 from app.models.util_model import UserData
 from app.models.user_model import RegisterForm, LoginForm
 from app.core.db import db
-from PIL import Image
 from datetime import datetime, date, timedelta
 from deep_translator import GoogleTranslator
 import random
@@ -14,8 +13,11 @@ import json
 import base64
 import bcrypt
 import uuid
-import os
-import io
+
+
+BADGE_RULES = {
+
+}
 
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
@@ -78,38 +80,33 @@ class User:
 
     def add_user(self):
         user_data = {
-            "firstname": self.firstname,
-            "lastname": self.lastname,
+            "username": self.username,
             "email": self.email,
             "psw": self.psw,
-            "phone": self.phone,
             "age": self.age,
-            "DOB": self.DOB,
+            "JD": self.JD,
             "confirm_email": False,
-            "profile_picture_url": ""
         }
 
         try:
             existing_user = db.collection("users").where(field_path="email", op_string="==", value=self.email).get()
             if existing_user:
-                raise HTTPException(status_code=400, detail={"error": "Email already registered"})
+                raise HTTPException(status_code=400, detail="Email already registered")
 
             db.collection("users").document(self.uuid).set(user_data)
 
             self.request_confirm_email()
+            return "success"
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
 
     def from_register(self, form: RegisterForm):
         self.uuid = generate_uuid()
-        self.firstname = form.firstname
-        self.lastname = form.lastname
+        self.username = form.username
         self.email = form.email
         self.psw = hash_password(form.psw)
-        self.phone = form.phone
-        self.age = calculate_age(form.DOB)
-        self.DOB = form.DOB
-        self.profile_picture_url = ""
+        self.age = calculate_age(form.JD)
+        self.JD = form.JD
         self.confirm_email = False
 
         return self.add_user()
@@ -129,9 +126,9 @@ class User:
 
             db.collection("email_codes").document(self.uuid).set(email_code_request)
 
-            #code_html = f"""<div style='display: flex;height: 61px;width: 249px;justify-content: space-between;align-items: center;flex-direction: row;line-height: 14px;'>{"".join(f"<div style='display: flex;height: 11px;padding: 19px 6px;border: 2px solid #6f67d9;border-radius: 7px;background-color: #f5f5f5;color: #000;font-size: 40px;'>{str(email_code)[i]}</div>" for i in range(len(str(email_code))))}</div>"""
+            code_html = f"""<div style='display: flex;height: 61px;width: 249px;justify-content: space-between;align-items: center;flex-direction: row;line-height: 14px;'>{"".join(f"<div style='display: flex;height: 11px;padding: 19px 6px;border: 2px solid #6f67d9;border-radius: 7px;background-color: #f5f5f5;color: #000;font-size: 40px;'>{str(email_code)[i]}</div>" for i in range(len(str(email_code))))}</div>"""
 
-            """html_content = [
+            html_content = [
                 {
                     "type": "table",
                     "content": [    
@@ -140,12 +137,12 @@ class User:
                             "content": [
                                 {"type": "image", "content": "image/logo.png"},
                                 {"type": "header", "content": "Verify Your Email Address"},
-                                {"type": "text", "content": "We just need to verify your email address to activate your Navify account. Here's your verification code:"},
+                                {"type": "text", "content": "We just need to verify your email address to activate your SurfNetwork account. Here's your verification code:"},
                                 {"type": "html", "content": code_html},
                                 {"type": "html", "content": "This code expires within 5 minutes"},
-                                {"type": "text", "content": "Only enter this code on the Navify website or app. Don't share it with anyone. We'll never ask for it outside any of our platforms."},
+                                {"type": "text", "content": "Only enter this code on the SurfNetwork website. Don't share it with anyone. We'll never ask for it outside any of our platforms."},
                                 {"type": "text", "content": "Welcome aboard!"},
-                                {"type": "text", "content": "Navify Team"}
+                                {"type": "text", "content": "SurfNetwork Team"}
                             ]
                         }
                     ]
@@ -153,8 +150,8 @@ class User:
                 {
                     "type": "table",
                     "content": [
-                        {"type": "text", "content": "This email was sent to you by Navify because you signed up for a Navify account.break-linePlease let us know if you feel that this email was sent to you by error."},
-                        {"type": "text", "content": "© 2025 Navify"},
+                        {"type": "text", "content": "This email was sent to you by the SurfNetwork because you signed up for a SurfNetwork account.break-linePlease let us know if you feel that this email was sent to you by error."},
+                        {"type": "text", "content": "© 2025 SurfNetwork"},
                         {"type": "list", "content": [
                             {"type": "hyperlink", "content": "Privacy Policy", "link": "#"},
                             {"type": "hyperlink", "content": "Personal Data Protection and Privacy Policy", "link": "#"},
@@ -164,16 +161,16 @@ class User:
                 }
             ]
 
-            send_html_email(to_email=self.email, to_name=f"{self.firstname} {self.lastname}", subject="Verify your email - Navify", html_content=html_content)"""
+            send_html_email(to_email=self.email, to_name=self.username, subject="Verify your email - SurfNetwork", html_content=html_content)
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
 
     def from_login(self, form: LoginForm):
 
-        query = db.collection("users").where(field_path="email", op_string="==", value=form.email).get()
+        query = db.collection("users").where(field_path="username", op_string="==", value=form.username).get()
         if not query:
-            raise HTTPException(status_code=404, detail={"error": "Invalid email, please register with this email"})
+            raise HTTPException(status_code=404, detail={"error": "Invalid username, please register with this username"})
 
         user_data = query[0].to_dict()
         if user_data is None:
@@ -183,27 +180,21 @@ class User:
             raise HTTPException(status_code=400, detail={"error": "Incorrect password"})
 
         self.uuid = query[0].id
-        self.firstname = user_data["firstname"]
-        self.lastname = user_data["lastname"]
+        self.username = user_data["username"]
         self.email = user_data["email"]
         self.psw = user_data["psw"]
-        self.phone = user_data["phone"]
-        self.age = user_data["age"]
-        self.DOB = user_data["DOB"]
-        self.profile_picture_url = user_data["profile_picture_url"]
+        self.age = calculate_age(user_data["JD"])
+        self.JD = user_data["JD"]
         self.confirm_email = user_data["confirm_email"]
 
         return self.fetch_userdata().model_dump()
 
     def from_userdata(self, userdata: UserData, should_update: bool = False):
         self.uuid = userdata.id
-        self.firstname = userdata.firstname
-        self.lastname = userdata.lastname
+        self.username = userdata.username
         self.email = userdata.email
-        self.phone = userdata.phone
-        self.age = userdata.age
-        self.DOB = userdata.DOB
-        self.profile_picture_url = userdata.profile_picture_url
+        self.age = calculate_age(userdata.JD)
+        self.JD = userdata.JD
         self.confirm_email = userdata.confirm_email
 
         if should_update:
@@ -219,14 +210,11 @@ class User:
         if user is None:
             raise HTTPException(status_code=500, detail={"error": "User data not found"})
         
-        self.firstname = user["firstname"]
-        self.lastname = user["lastname"]
+        self.username = user["username"]
         self.email = user["email"]
         self.psw = user["psw"]
-        self.phone = user["phone"]
         self.age = user["age"]
-        self.DOB = user["DOB"]
-        self.profile_picture_url = user["profile_picture_url"]
+        self.JD = user["JD"]
         self.confirm_email : bool = user["confirm_email"]
         
         return self.fetch_userdata()
@@ -281,7 +269,7 @@ class User:
         ]
 
 
-        send_html_email(to_email=self.email, to_name=f"{self.firstname} {self.lastname}", subject="Verify your email - Navify", html_content=html_content)
+        send_html_email(to_email=self.email, to_name=self.username, subject="Verify your email - Navify", html_content=html_content)
 
         user_reset_request = {
             "datetime": datetime.now(),

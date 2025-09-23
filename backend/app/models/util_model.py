@@ -7,11 +7,7 @@ from datetime import datetime
 
 class UserData(BaseModel):
     id: str
-    firstname: str
-    lastname: str
+    username: str
     email: EmailStr
-    phone: str
-    age: int
-    DOB: datetime
-    profile_picture_url: str
+    JD: datetime
     confirm_email: bool = False

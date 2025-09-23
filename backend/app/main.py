@@ -22,4 +22,4 @@ app.mount("/public", StaticFiles(directory="public"), name="public")
 
 @app.get("/")
 async def root():
-    return {"message": "Navify"}
+    return {"message": "Welcome to the SurfNetwork API"}

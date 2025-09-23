@@ -22,7 +22,7 @@ def send_html_email(to_email: str, to_name: str, subject: str, html_content: Lis
     inline_images: list of dicts with keys: "ContentID", "ContentType", "Filename", "Base64Content"
     """
     html, images = render_html_email(html_content)
-    
+
     message = {
         "Messages": [
             {
@@ -143,10 +143,10 @@ def extract_image_sources_from_json(content: list) -> list:
     image_sources = []
 
     def walk(blocks):
-        for block  in blocks:
+        for block in blocks:
             block_type = block.get("type")
             if block_type == "image":
-                image_sources[block["content"]]
+                image_sources.append(block["content"])
             elif block_type in ["table", "list"]:
                 walk(block.get("content", []))
 
@@ -182,7 +182,7 @@ def parse_html_with_image(html: str, images: list) -> Dict:
             "Base64Content": image_b64
         })
 
-        html.replace(image, f"cid:{image_id}")
+        html = html.replace(image, f"cid:{image_id}")
 
 
-    return {"html": html, "image": inline_images}
+    return html, inline_images

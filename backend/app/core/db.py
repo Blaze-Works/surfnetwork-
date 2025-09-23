@@ -17,6 +17,7 @@ if not firebase_key_base64:
 decoded_key = base64.b64decode(firebase_key_base64)
 service_account_info = json.loads(decoded_key)
 
+
 if not firebase_admin._apps:
     cred = credentials.Certificate(service_account_info)
     firebase_admin.initialize_app(cred)
