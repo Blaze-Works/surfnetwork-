@@ -105,7 +105,7 @@ class User:
         self.username = form.username
         self.email = form.email
         self.psw = hash_password(form.psw)
-        self.age = calculate_age(form.JD)
+        self.age = calculate_age(datetime.now)
         self.JD = datetime.now()
         self.confirm_email = False
 
