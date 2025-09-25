@@ -1,18 +1,26 @@
 # app/core/utils.py
 
 from fastapi import HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from app.core.mail import send_html_email
 from app.models.util_model import UserData
 from app.models.user_model import RegisterForm, LoginForm
 from app.core.db import db
 from datetime import datetime, date, timedelta
 from deep_translator import GoogleTranslator
+import os
 import random
+import requests
 import json
 import base64
 import bcrypt
 import uuid
+
+DISCORD_API_URL= "https://discord.com/api"
+CLIENT_ID = os.getenv("CLIENT_KEY")
+CLIENT_SECRET_KEY = os.getenv("CLIENT_SECRET_KEY")
+REDIRECT_URI = "http://localhost:5729/login/auth/discord/callback"
+OAUTH_SCOPE = "identify email"
 
 
 BADGE_RULES = {
@@ -48,6 +56,42 @@ def calculate_age(jd):
     age = today.year - jd.year - ((today.month, today.day) < (jd.month, jd.day))
     return age
 
+def discord_login():
+
+    discord_login_url = (
+        f"{DISCORD_API_URL}/oauth2/authorize"
+        f"?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
+        f"&response_type=code&scope={OAUTH_SCOPE}"
+    )
+
+    return RedirectResponse(url=discord_login_url)
+
+def discord_callback(code):
+    if code is None:
+        raise HTTPException(status_code=400, detail={"error": "No code returned from Discord"})
+
+    # Exchange code for access token
+    data = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET_KEY,
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": REDIRECT_URI,
+        "scope": OAUTH_SCOPE,
+    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    token = requests.post(f"{DISCORD_API_URL}/oauth2/token", data=data, headers=headers).json()
+
+    # Get user info
+    access_token = token["access_token"]
+    user = requests.get(
+        f"{DISCORD_API_URL}/users/@me",
+        headers={"Authorization": f"Bearer {access_token}"}
+    ).json()
+
+    new_user = User()
+    return new_user.from_discord_login()
+                                                                 
 
 class User:
     def __init__(self):
@@ -112,6 +156,9 @@ class User:
         self.sub = form.sub
 
         return self.add_user()
+
+    def from_discord_login(self):
+        print("To be continued")
 
     def request_confirm_email(self):
         email_code = round(random.randint(100000, 999999))

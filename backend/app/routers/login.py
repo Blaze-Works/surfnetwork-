@@ -1,10 +1,9 @@
 # app/routers/login.py
 
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
 from app.models.util_model import UserData
 from app.models.user_model import LoginForm
-from app.core.utils import User
+from app.core.utils import User, discord_login, discord_callback
 
 router = APIRouter()
 
@@ -12,6 +11,14 @@ router = APIRouter()
 def user_login(form: LoginForm):
     user = User()
     return user.from_login(form)
+
+@router.get(path="/login/auth/discord")
+def discord_auth():
+    return discord_login()
+
+@router.post(path="/login/auth/discord/callback")
+def discord_auth_callback(code):
+    return discord_callback(code)
 
 @router.post(path="/login/req-psw-reset", response_model=dict)
 def request_password_reset(user_id: str):

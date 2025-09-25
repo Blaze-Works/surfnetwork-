@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import admin, login, register
-import os
 
 app = FastAPI(title="SurfNetwork API")
 
