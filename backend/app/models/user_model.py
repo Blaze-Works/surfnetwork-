@@ -8,6 +8,6 @@ class RegisterForm(BaseModel):
     sub: bool
 
 class LoginForm(BaseModel):
-    username: str
+    email: EmailStr
     psw: str
     

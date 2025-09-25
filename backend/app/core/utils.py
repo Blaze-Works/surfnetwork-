@@ -86,12 +86,13 @@ class User:
             "age": self.age,
             "JD": self.JD,
             "confirm_email": False,
+            "sub": self.sub
         }
 
         try:
             existing_user = db.collection("users").where(field_path="email", op_string="==", value=self.email).get()
             if existing_user:
-                raise HTTPException(status_code=400, detail="Email already registered")
+                return "Email already registered"
 
             db.collection("users").document(self.uuid).set(user_data)
 
@@ -105,9 +106,10 @@ class User:
         self.username = form.username
         self.email = form.email
         self.psw = hash_password(form.psw)
-        self.age = calculate_age(datetime.now)
+        self.age = calculate_age(datetime.now())
         self.JD = datetime.now()
         self.confirm_email = False
+        self.sub = form.sub
 
         return self.add_user()
 
@@ -168,9 +170,9 @@ class User:
 
     def from_login(self, form: LoginForm):
 
-        query = db.collection("users").where(field_path="username", op_string="==", value=form.username).get()
+        query = db.collection("users").where(field_path="email", op_string="==", value=form.email).get()
         if not query:
-            raise HTTPException(status_code=404, detail={"error": "Invalid username, please register with this username"})
+            raise HTTPException(status_code=404, detail={"error": "Invalid email, please register with this username"})
 
         user_data = query[0].to_dict()
         if user_data is None:

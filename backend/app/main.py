@@ -9,8 +9,8 @@ app = FastAPI(title="SurfNetwork API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("DEV_IP"), "https://surfnetwork.xyz"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
