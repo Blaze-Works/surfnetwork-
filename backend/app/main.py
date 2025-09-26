@@ -28,6 +28,10 @@ async def reveal_ip():
 async def player_count():
     return {"count": 0, "maxCount": 0}
 
+@app.get("/get-server-stats")
+async def server_stats():
+    return {"ip": "No ip available", "online": False, "count": 0, "max": 0, "tps": 0, "version": "N/A", "uptime": "N/A", "total": 0, "average": 0, "motd": "N/A", "software": "N/A"}
+
 @app.get("/health-check")
 def health_check():
     return {"status": "ok"}
