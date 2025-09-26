@@ -20,6 +20,18 @@ app.include_router(register.router)
 
 app.mount("/public", StaticFiles(directory="public"), name="public")
 
+@app.get('/get-server-ip')
+async def reveal_ip():
+    return {"ip": "No ip available"}
+
+@app.get("/player-count")
+async def player_count():
+    return {"count": 0, "maxCount": 0}
+
+@app.get("/health-check")
+def health_check():
+    return {"status": "ok"}
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to the SurfNetwork API"}
