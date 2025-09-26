@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from app.core.mail import send_html_email
 from app.models.util_model import UserData
 from app.models.user_model import RegisterForm, LoginForm
+from app.models.admin_model import AdminData, AdminRegisterForm, AdminLoginForm
 from app.core.db import db
 from datetime import datetime, date, timedelta
 from deep_translator import GoogleTranslator
@@ -94,9 +95,7 @@ def discord_callback(code):
                                                                  
 
 class User:
-    def __init__(self):
-        self.uuid = generate_uuid()
-        self.profile_picture_url = ""
+    def __init__(self):        self.uuid = generate_uuid()
 
     def fetch_userdata(self):
         return UserData(
@@ -568,3 +567,143 @@ class User:
 
         user_ref.set(user_data)
         return JSONResponse(status_code=200, content={"message": "Reward redeemed"})
+
+class Admin:
+    def __init__(self):
+        self.id = generate_uuid()
+
+    def fetch_admindata(self):
+        return AdminData(
+            id = self.uuid,
+            username = self.username,
+            email = self.email,
+            role = self.role,
+            rank = self.rank,
+            logTime = self.logTime,
+            isActive = self.isActive
+            probation = self.probation
+        )
+
+    def update_db(self):
+        user_data = {
+            "username": self.username,
+            "role": self.role,
+            "rank": self.rank,
+            "logTime": self.logTime,
+            "isActive": self.isActive,
+            "probation": self.probation
+        }
+
+        user = db.collection("admins").document(self.uuid)
+        if not user.get().exists:
+            return JSONResponse(status_code=404, content={"error": "Invalid admin ID"})
+
+        user.update(user_data)
+        return {"status": "success", "admindata": user_data}
+
+    def add_admin(self):
+        user_data = {
+            "username": self.username,
+            "email": self.email,
+            "psw": self.psw,
+            "role": self.role,
+            "rank": self.rank,
+            "logTime": self.logTime,
+            "isActive": self.isActive,
+            "probation": self.probation
+        }
+
+        try:
+            existing_admin = db.collection("admins").where(field_path="email", op_string="==", value=self.email).get()
+            if existing_user:
+                return "Email already registered"
+
+            db.collection("admins").document(self.uuid).set(user_data)
+
+            self.request_confirm_email()
+            return "success"
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=e)
+
+    def from_register(self, form: AdminRegisterForm):
+        self.uuid = generate_uuid()
+        self.username = form.username
+        self.email = form.email
+        self.psw = hash_password(form.psw)
+        self.role = form.role
+        self.rank = form.rank
+        self.logTime = datetime.now()
+        self.isActive = False
+        self.probation = False
+
+        return self.add_admin() 
+
+    def from_login(self, form: AdminLoginForm):
+
+        query = db.collection("admins").where(field_path="email", op_string="==", value=form.email).get()
+        if not query:
+            raise HTTPException(status_code=404, detail={"error": "Invalid email, please apply with this email or contact an admin to help resolve the issue"})
+
+        admin_data = query[0].to_dict()
+        if admin_data is None:
+            raise HTTPException(status_code=404, detail={"error": "Admin data not found"})
+
+        if not verify_password(form.psw, admin_data["psw"]):
+            raise HTTPException(status_code=400, detail={"error": "Incorrect password"})
+
+        self.uuid = query[0].id
+        self.username = admin_data["username"]
+        self.email = admin_data["email"]
+        self.psw = admin_data["psw"]
+        self.role = admin_data["role"]
+        self.rank = admin_data["rank"]
+        self.logTime = datetime.now()
+        self.isActive = True
+        self.probation = admin_data["probation"]
+
+        return self.fetch_userdata().model_dump()
+
+    def from_userdata(self, admindata: AdminData, should_update: bool = False):
+        self.uuid = admindata.id
+        self.username = admindata.username
+        self.email = admindata.email
+        self.role = admindata.role
+        self.rank = admindata.rank
+        self.logTime = admindata.logTime
+        self.isActive = admindata.isActive
+        self.probation = admindata.probation
+
+        if should_update:
+            return self.update_db()
+
+    def fromUUID(self, uuid: str):
+        self.uuid = uuid
+        query = db.collection("admins").document(self.uuid).get()
+        if not query:
+            raise HTTPException(status_code=404, detail={"error": "Invalid admin ID"})
+
+        user = query.to_dict()
+        if user is None:
+            raise HTTPException(status_code=500, detail={"error": "Admin data not found"})
+        
+        self.username = query["username"]
+        self.email = query["email"]
+        self.role = query["role"]
+        self.rank = query["rank"]
+        self.logTime = query["logTime"]
+        self.isActive = query["isActive"]
+        self.probation = query["probation"]
+        
+        return self.fetch_userdata()
+
+    def fetch_data(self, data: str):
+        uuid = self.uuid
+        query = db.collection(data).document(uuid).get()
+        if not query:
+            raise HTTPException(status_code=404, detail={"error": f"Invalid admin ID"})
+
+        result = query.to_dict()
+        if result is None:
+            raise HTTPException(status_code=500, detail={"error": f"cannot fetch {data} with admin ID"})
+
+        return result
