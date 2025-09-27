@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from app.core.mail import send_html_email
 from app.models.util_model import UserData
 from app.models.user_model import RegisterForm, LoginForm
-from app.models.admin_model import AdminData, AdminRegisterForm, AdminLoginForm
+from app.models.admin_models import AdminData, AdminRegisterForm, AdminLoginForm
 from app.core.db import db
 from datetime import datetime, date, timedelta
 from deep_translator import GoogleTranslator
