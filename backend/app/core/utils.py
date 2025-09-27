@@ -92,10 +92,28 @@ def discord_callback(code):
 
     new_user = User()
     return new_user.from_discord_login()
+
+def get_admin_code():
+    try:
+        with open("admin_code.txt", "r") as file:
+            code = int(file.read().strip())
+            return code
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": "Admin code not set up properly"})
+
+def set_admin_code(new_code: int):
+    try:
+        with open("admin_code.txt", "w") as file:
+            file.write(str(new_code))
+          
+    except Exception as e:
+        print(f"Error setting admin code {e})")
                                                                  
 
 class User:
-    def __init__(self):        self.uuid = generate_uuid()
+    def __init__(self):
+        self.uuid = generate_uuid()
 
     def fetch_userdata(self):
         return UserData(
@@ -617,14 +635,18 @@ class Admin:
         try:
             existing_admin = db.collection("admins").where(field_path="email", op_string="==", value=self.email).get()
             if existing_admin:
-                return "Email already registered"
+                return {"error" :"Email already registered"}
 
             db.collection("admins").document(self.uuid).set(user_data)
-            return "success"
+            return {"status": "success"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
 
     def from_register(self, form: AdminRegisterForm):
+        admin_code = form.admin_code
+        if admin_code != get_admin_code():
+            raise HTTPException(status_code=403, detail={"error": "Invalid admin code"})
+        
         self.uuid = generate_uuid()
         self.username = form.username
         self.email = form.email

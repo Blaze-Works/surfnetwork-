@@ -1,7 +1,9 @@
 .vscode
 *.pyc
+*.sh
 __pycache__
 test
 test.py
+admin_code.txt
 env
 .env

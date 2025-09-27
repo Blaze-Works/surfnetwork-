@@ -19,6 +19,7 @@ class AdminRegisterForm(BaseModel):
     psw: str
     role: str
     rank: str
+    admin_code: int
 
 class AdminLoginForm(BaseModel):
     email: EmailStr
