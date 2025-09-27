@@ -571,6 +571,7 @@ class User:
 class Admin:
     def __init__(self):
         self.id = generate_uuid()
+        self.logTime = datetime.now()
 
     def fetch_admindata(self):
         return AdminData(
@@ -580,7 +581,7 @@ class Admin:
             role = self.role,
             rank = self.rank,
             logTime = self.logTime,
-            isActive = self.isActive
+            isActive = self.isActive,
             probation = self.probation
         )
 
@@ -615,12 +616,10 @@ class Admin:
 
         try:
             existing_admin = db.collection("admins").where(field_path="email", op_string="==", value=self.email).get()
-            if existing_user:
+            if existing_admin:
                 return "Email already registered"
 
             db.collection("admins").document(self.uuid).set(user_data)
-
-            self.request_confirm_email()
             return "success"
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
@@ -661,7 +660,7 @@ class Admin:
         self.isActive = True
         self.probation = admin_data["probation"]
 
-        return self.fetch_userdata().model_dump()
+        return self.fetch_admindata().model_dump()
 
     def from_userdata(self, admindata: AdminData, should_update: bool = False):
         self.uuid = admindata.id
@@ -686,15 +685,15 @@ class Admin:
         if user is None:
             raise HTTPException(status_code=500, detail={"error": "Admin data not found"})
         
-        self.username = query["username"]
-        self.email = query["email"]
-        self.role = query["role"]
-        self.rank = query["rank"]
-        self.logTime = query["logTime"]
-        self.isActive = query["isActive"]
-        self.probation = query["probation"]
+        self.username = user["username"]
+        self.email = user["email"]
+        self.role = user["role"]
+        self.rank = user["rank"]
+        self.logTime = user["logTime"]
+        self.isActive = user["isActive"]
+        self.probation = user["probation"]
         
-        return self.fetch_userdata()
+        return self.fetch_admindata()
 
     def fetch_data(self, data: str):
         uuid = self.uuid

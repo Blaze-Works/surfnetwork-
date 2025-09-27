@@ -1,7 +1,7 @@
 # app/models/admin_models.py
 
 from pydantic import BaseModel, EmailStr
-import datetime
+from datetime import datetime
 
 class AdminData(BaseModel):
     id: str
