@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from app.core import mc
 from app.routers import admin, login, register
 
 app = FastAPI(title="SurfNetwork API")
@@ -17,6 +18,7 @@ app.add_middleware(
 app.include_router(admin.router)
 app.include_router(login.router)
 app.include_router(register.router)
+app.include_router(mc.router)
 
 app.mount("/public", StaticFiles(directory="public"), name="public")
 

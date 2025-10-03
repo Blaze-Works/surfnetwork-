@@ -110,6 +110,14 @@ def set_admin_code(new_code: int):
     except Exception as e:
         print(f"Error setting admin code {e})")
                                                                  
+def verify_admin(admin_id: str) -> bool:
+    admin = Admin()
+    admin.fromUUID(admin_id)
+    admin_data = admin.fetch_admindata()
+    if admin_data.isActive and not admin_data.probation:
+        return True
+    
+    return False 
 
 class User:
     def __init__(self):
@@ -681,6 +689,8 @@ class Admin:
         self.logTime = datetime.now()
         self.isActive = True
         self.probation = admin_data["probation"]
+
+        self.update_db()
 
         return self.fetch_admindata().model_dump()
 

@@ -3,6 +3,7 @@
 *.sh
 __pycache__
 test
+plugin
 test.py
 admin_code.txt
 env
