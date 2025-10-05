@@ -18,8 +18,8 @@ def admin_register(form: AdminRegisterForm):
     admin = Admin()
     return admin.from_register(form)
 
-@router.get(path="/admin/get-admin-code", response_model=dict[str, int])
-def get_code(admin_id: str) :
+@router.get(path="/admin/get-admin-code")
+def get_code(admin_id: str):
     if verify_admin(admin_id) is True:
         code = get_admin_code()
         return {"admin_code", code}
