@@ -93,7 +93,7 @@ def discord_callback(code):
     new_user = User()
     return new_user.from_discord_login()
 
-def get_admin_code():
+def get_admin_code() -> int:
     try:
         with open("admin_code.txt", "r") as file:
             code = int(file.read().strip())

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 from app.models.admin_models import AdminLoginForm, AdminRegisterForm
-from app.core.utils import Admin, set_admin_code
+from app.core.utils import Admin, verify_admin, get_admin_code, set_admin_code
 import threading
 import random
 
@@ -17,6 +17,12 @@ def admin_login(form: AdminLoginForm):
 def admin_register(form: AdminRegisterForm):
     admin = Admin()
     return admin.from_register(form)
+
+@router.get(path="/admin/get-admin-code", response_model=dict[str, int])
+def get_code(admin_id: str) :
+    if verify_admin(admin_id) is True:
+        code = get_admin_code()
+        return {"admin_code", code}
 
 # Note: The admin registration endpoint is protected by an admin code for security.
 # Ensure to provide the correct admin code in registration requests.
