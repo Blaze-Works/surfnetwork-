@@ -186,6 +186,18 @@ async def get_mc_players(admin_id: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+        
+@router.post("/mc/whitelist/get")
+async def add_mc_whitelist(admin_id: str, player: str):
+    if verify_admin(admin_id) is False:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    try:
+        response = await send_request_to_plugin({"action": "get_whitelist"})
+        return {"status": response}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 @router.post("/mc/whitelist/add")
 async def add_mc_whitelist(admin_id: str, player: str):
