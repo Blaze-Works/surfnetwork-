@@ -54,7 +54,7 @@ async def ws(websocket: WebSocket):
         print("Websocket disconnected")
         plugin_ws = None
 
-@router.websocket("ws/server_logs")
+@router.websocket("/ws/server_logs")
 async def dashboard_ws(websocket: WebSocket):
     await websocket.accept()
     for log in pending_logs:
