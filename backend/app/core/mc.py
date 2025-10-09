@@ -10,8 +10,6 @@ plugin_ws = None
 pending_requests = {}
 dashboard_clients = []
 
-print("MC ROUTER LOADED")
-
 pending_logs: list[str] = []
 MAX_LOGS = 500
 
@@ -188,7 +186,7 @@ async def get_mc_players(admin_id: str):
         raise HTTPException(status_code=500, detail=str(e))
         
 @router.post("/mc/whitelist/get")
-async def add_mc_whitelist(admin_id: str, player: str):
+async def add_mc_whitelist(admin_id: str):
     if verify_admin(admin_id) is False:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
