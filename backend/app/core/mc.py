@@ -186,7 +186,7 @@ async def get_mc_players(admin_id: str):
         raise HTTPException(status_code=500, detail=str(e))
         
 @router.post("/mc/whitelist/get")
-async def add_mc_whitelist(admin_id: str):
+async def get_mc_whitelist(admin_id: str):
     if verify_admin(admin_id) is False:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
