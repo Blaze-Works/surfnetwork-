@@ -269,14 +269,38 @@ async def list_mc_backups(admin_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/mc/op/remove")
+@router.post("/mc/op/add")
 async def add_mc_op(admin_id: str, player: str):
+    if verify_admin(admin_id) is False:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    try:
+        response = await send_request_to_plugin({"action": "add_op", "player": player})
+        return {"status": response}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/mc/op/remove")
+async def remove_mc_op(admin_id: str, player: str):
     if verify_admin(admin_id) is False:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
     try:
         response = await send_request_to_plugin({"action": "remove_op", "player": player})
         return {"status": response}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/mc/op/list")
+async def list_mc_op(admin_id: str, player: str):
+    if verify_admin(admin_id) is False:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    try:
+        response = await send_request_to_plugin({"action": "list_op"})
+        return {"ops": response}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -360,18 +384,6 @@ async def modify_mc_player_data(admin_id: str, player: str, new_data: dict):
     
     try:
         response = await send_request_to_plugin({"action": "update_player", "player": player, "new_data": new_data})
-        return {"status": response}
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@router.delete("/mc/player-data/delete")
-async def delete_mc_player_data(admin_id: str, player: str):
-    if verify_admin(admin_id) is False:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    
-    try:
-        response = await send_request_to_plugin({"action": "delete_player", "player": player})
         return {"status": response}
     
     except Exception as e:
