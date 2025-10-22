@@ -111,7 +111,7 @@ async def server_stats():
         return {"status": response}
     
     except Exception as e:
-        return {"status: 
+        return {"status": 
                     "ip": "0.0.0.0",
                     "tps": 0,
                     "motd": "Offline",
