@@ -111,7 +111,7 @@ async def server_stats():
         return {"status": response}
     
     except Exception as e:
-        return {"status": 
+        return {"status": {
                     "ip": "0.0.0.0",
                     "tps": 0,
                     "motd": "Offline",
@@ -123,7 +123,8 @@ async def server_stats():
                     "count": 0,
                     "average": 0,
                     "max": 0
-               }
+                }
+           }
 
 @router.get("/mc/status")
 async def get_mc_status(admin_id: str):
