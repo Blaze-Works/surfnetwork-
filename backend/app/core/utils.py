@@ -9,7 +9,9 @@ from app.models.admin_models import AdminData, AdminRegisterForm, AdminLoginForm
 from app.core.db import db
 from datetime import datetime, date, timedelta
 from deep_translator import GoogleTranslator
+from pathlib import Path
 import os
+import filetype
 import random
 import requests
 import json
@@ -92,6 +94,108 @@ def discord_callback(code):
 
     new_user = User()
     return new_user.from_discord_login()
+
+def load_image_from_path(image_path: str) -> bytes:
+    import filetype
+
+    p = Path(image_path)
+    if not p.exists():
+        raise HTTPException(status_code=404, detail={"error": "Image not found"})
+    if not p.is_file():
+        raise HTTPException(status_code=400, detail={"error": "Invalid image path"})
+
+    try:
+        image_bytes = p.read_bytes()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+    # Validate that the file is an image using filetype
+    kind = filetype.guess(image_bytes)
+    if kind is None or not kind.mime.startswith('image/'):
+        raise HTTPException(status_code=400, detail={"error": "File is not a valid image"})
+
+    return image_bytes
+
+def image_to_dataurl(image) -> str:
+    import filetype
+
+    if isinstance(image, (str, Path)):
+        with open(image, 'rb') as f:
+            image_bytes = f.read()
+    else:
+        image_bytes = image
+
+    # Detect image type using filetype
+    kind = filetype.guess(image_bytes)
+    if kind is None or not kind.mime.startswith('image/'):
+        raise ValueError("Could not determine image type or file is not an image")
+
+    b64_str = base64.b64encode(image_bytes).decode('utf-8')
+    return f"data:image/{image_type};base64,{b64_str}"
+
+def dataurl_to_image(dataurl: str) -> bytes:
+    import base64
+    
+    if not dataurl.startswith('data:image/'):
+        raise ValueError("Invalid data URL - must start with 'data:image/'")
+    
+    header, b64_data = dataurl.split(',', 1)
+    return base64.b64decode(b64_data)
+
+def get_time_elasped(dt, full=False) -> list:
+  if isinstance(dt, str):
+    try:
+      ago = datetime.fromisoformat(dt)
+    except Exception:
+      ago = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+  elif isinstance(dt, datetime):
+    ago = dt
+  else:
+    raise TypeError("dt must be a datetime or a datetime string")
+
+  now = datetime.now(ago.tzinfo) if ago.tzinfo else datetime.now()
+  delta = now - ago
+  total_seconds = int(delta.total_seconds())
+  if total_seconds <= 0:
+    return []
+
+  days = delta.days
+  seconds = total_seconds - (days * 24 * 3600)
+
+  years = days // 365
+  days -= years * 365
+  months = days // 30
+  days -= months * 30
+  weeks = days // 7
+  days -= weeks * 7
+
+  hours = seconds // 3600
+  minutes = (seconds % 3600) // 60
+  secs = seconds % 60
+
+  parts_def = [
+    (years, "year"),
+    (months, "month"),
+    (weeks, "week"),
+    (days, "day"),
+    (hours, "hour"),
+    (minutes, "minute"),
+    (secs, "second"),
+  ]
+
+  parts = []
+  for value, name in parts_def:
+    if value:
+      parts.append(f"{value} {name}{"s" if value > 1 else ""}")
+
+  if not full:
+    parts = parts[:1]
+
+  return parts
+
+def time_elasped_string(dt, full=False) -> str:
+    string = get_time_elasped(dt, full)
+    return (", ").join(string) + " ago" if string else "just now"
 
 def get_admin_code() -> int:
     try:
@@ -238,7 +342,7 @@ class User:
             send_html_email(to_email=self.email, to_name=self.username, subject="Verify your email - SurfNetwork", html_content=html_content)
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=e)
+            raise HTTPException(status_code=500, detail={"error": str(e)})
 
     def from_login(self, form: LoginForm):
 
@@ -321,7 +425,7 @@ class User:
                             {"type": "text", "content": "We just need to verify it you before you can reset your password, here's your reset code:"},
                             {"type": "html", "content": code_html},
                             {"type": "html", "content": "This code expires within 5 minutes"},
-                            {"type": "text", "content": "Only enter this code on the Navify website or app. Don't share it with anyone. We'll never ask for it outside any of our platforms."},
+                            {"type": "text", "content": "Only enter this code on the SurfNetwork website or app. Don't share it with anyone. We'll never ask for it outside any of our platforms."},
                             {"type": "text", "content": "If you see this email and you didn't request a password reset, click below to go to \"Acccount Management\" to secure your account"},
                             {"type": "button", "content": "Account Management", "hyperlink": "#"}
                         ]
@@ -331,8 +435,8 @@ class User:
             {
                 "type": "table",
                 "content": [
-                    {"type": "text", "content": "This email was sent to you by Navify because you signed up for a Navify account.break-linePlease let us know if you feel that this email was sent to you by error."},
-                    {"type": "text", "content": "© 2025 Navify"},
+                    {"type": "text", "content": "This email was sent to you by SurfNetwork because you signed up for a SurfNetwork account.break-linePlease let us know if you feel that this email was sent to you by error."},
+                    {"type": "text", "content": "© 2025 SurfNetwork"},
                     {"type": "list", "content": [
                         {"type": "hyperlink", "content": "Privacy Policy", "link": "#"},
                         {"type": "hyperlink", "content": "Personal Data Protection and Privacy Policy", "link": "#"},
@@ -342,8 +446,7 @@ class User:
             }
         ]
 
-
-        send_html_email(to_email=self.email, to_name=self.username, subject="Verify your email - Navify", html_content=html_content)
+        send_html_email(to_email=self.email, to_name=self.username, subject="Verify your email - SurfNetwork", html_content=html_content)
 
         user_reset_request = {
             "datetime": datetime.now(),
@@ -598,6 +701,7 @@ class Admin:
     def __init__(self):
         self.id = generate_uuid()
         self.logTime = datetime.now()
+        self.color = '#21b4b4'
 
     def fetch_admindata(self):
         return AdminData(
@@ -605,7 +709,8 @@ class Admin:
             username = self.username,
             email = self.email,
             role = self.role,
-            rank = self.rank,
+            badges = self.badges,
+            color = self.color,
             logTime = self.logTime,
             isActive = self.isActive,
             probation = self.probation
@@ -615,7 +720,8 @@ class Admin:
         user_data = {
             "username": self.username,
             "role": self.role,
-            "rank": self.rank,
+            "badges": self.badges,
+            "color": self.color,
             "logTime": self.logTime,
             "isActive": self.isActive,
             "probation": self.probation
@@ -634,7 +740,8 @@ class Admin:
             "email": self.email,
             "psw": self.psw,
             "role": self.role,
-            "rank": self.rank,
+            "badges": self.badges,
+            "color": self.color,
             "logTime": self.logTime,
             "isActive": self.isActive,
             "probation": self.probation
@@ -659,8 +766,8 @@ class Admin:
         self.username = form.username
         self.email = form.email
         self.psw = hash_password(form.psw)
-        self.role = form.role
-        self.rank = form.rank
+        self.role = "admin"
+        self.badges = ["admin"]
         self.logTime = datetime.now()
         self.isActive = False
         self.probation = False
@@ -685,7 +792,8 @@ class Admin:
         self.email = admin_data["email"]
         self.psw = admin_data["psw"]
         self.role = admin_data["role"]
-        self.rank = admin_data["rank"]
+        self.badges = admin_data["badges"]
+        self.color = admin_data["color"]
         self.logTime = datetime.now()
         self.isActive = True
         self.probation = admin_data["probation"]
@@ -699,7 +807,8 @@ class Admin:
         self.username = admindata.username
         self.email = admindata.email
         self.role = admindata.role
-        self.rank = admindata.rank
+        self.badge = admindata.badges
+        self.color = admindata.color
         self.logTime = admindata.logTime
         self.isActive = admindata.isActive
         self.probation = admindata.probation
@@ -713,17 +822,18 @@ class Admin:
         if not query:
             raise HTTPException(status_code=404, detail={"error": "Invalid admin ID"})
 
-        user = query.to_dict()
-        if user is None:
-            raise HTTPException(status_code=500, detail={"error": "Admin data not found"})
+        admin = query.to_dict()
+        if admin is None:
+            raise HTTPException(status_code=404, detail={"error": "Admin data not found"})
         
-        self.username = user["username"]
-        self.email = user["email"]
-        self.role = user["role"]
-        self.rank = user["rank"]
-        self.logTime = user["logTime"]
-        self.isActive = user["isActive"]
-        self.probation = user["probation"]
+        self.username = admin["username"]
+        self.email = admin["email"]
+        self.role = admin["role"]
+        self.badges = admin["badges"]
+        self.color = admin["color"]
+        self.logTime = admin["logTime"]
+        self.isActive = admin["isActive"]
+        self.probation = admin["probation"]
         
         return self.fetch_admindata()
 

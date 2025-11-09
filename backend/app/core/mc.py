@@ -86,7 +86,7 @@ async def send_request_to_plugin(request_data):
         pending_requests.pop(request_id, None)
         raise Exception("Request timed out")
 
-@router.post("/get-server-ip")
+@router.get("/get-server-ip")
 async def reveal_ip():
     try:
         response = await send_request_to_plugin({"action": "get_ip"})
@@ -95,7 +95,7 @@ async def reveal_ip():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/player-count")
+@router.get("/player-count")
 async def player_count():
     try:
         response = await send_request_to_plugin({"action": "get_player_count"})
@@ -104,7 +104,7 @@ async def player_count():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/get-server-stats")
+@router.get("/get-server-stats")
 async def server_stats():
     try:
         response = await send_request_to_plugin({"action": "get_server_stats"})
