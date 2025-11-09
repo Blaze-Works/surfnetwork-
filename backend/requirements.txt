@@ -31,6 +31,7 @@ executing==2.2.0
 fastapi==0.115.13
 fastjsonschema==2.21.1
 filelock==3.13.1
+filetype==1.2.0
 firebase-admin==6.9.0
 fonttools==4.58.5
 fqdn==1.5.1
