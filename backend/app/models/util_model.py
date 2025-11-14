@@ -11,4 +11,5 @@ class UserData(BaseModel):
     email: EmailStr
     JD: datetime
     confirm_email: bool = False
+    player_id: Optional[str] = ""
     

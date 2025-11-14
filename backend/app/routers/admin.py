@@ -102,4 +102,4 @@ def reset_admin_code_periodically():
     set_admin_code(admin_code)
     threading.Timer(300, reset_admin_code_periodically).start()
     
-# threading.Timer(300, reset_admin_code_periodically).start()
+threading.Timer(300, reset_admin_code_periodically).start()

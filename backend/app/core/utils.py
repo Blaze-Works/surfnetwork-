@@ -204,7 +204,7 @@ def get_admin_code() -> int:
             return code
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail={"error": "Admin code not set up properly"})
+        raise HTTPException(status_code=500, detail={"error": f"Admin code not set up properly: {str(e)}"})
 
 def set_admin_code(new_code: int):
     try:
@@ -241,7 +241,7 @@ class User:
             "username": self.username,
             "age": self.age,
             "JD": self.JD,
-            "confirm_email": self.confirm_email
+            "confirm_email": self.confirm_email,
         }
 
         user = db.collection("users").document(self.uuid)
@@ -364,6 +364,7 @@ class User:
         self.age = calculate_age(user_data["JD"])
         self.JD = user_data["JD"]
         self.confirm_email = user_data["confirm_email"]
+        self.player_id = user_data["player_id"]
 
         return self.fetch_userdata().model_dump()
 
@@ -374,6 +375,7 @@ class User:
         self.age = calculate_age(userdata.JD)
         self.JD = userdata.JD
         self.confirm_email = userdata.confirm_email
+        self.player_id = userdata.player_id
 
         if should_update:
             return self.update_db()
@@ -394,6 +396,10 @@ class User:
         self.age = user["age"]
         self.JD = user["JD"]
         self.confirm_email : bool = user["confirm_email"]
+        if user["player_id"] is None:
+            self.player_id = ""
+        else:
+            self.player_id = user["player_id"]
         
         return self.fetch_userdata()
 

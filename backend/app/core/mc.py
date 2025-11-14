@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from app.core.utils import verify_admin
+from app.models.util_model import UserData
 import uuid
 import asyncio
 import json
@@ -85,6 +86,17 @@ async def send_request_to_plugin(request_data):
     except asyncio.TimeoutError:
         pending_requests.pop(request_id, None)
         raise Exception("Request timed out")
+
+def get_playerid(user: UserData) -> str:
+    return user.player_id
+
+async def get_playername(user: UserData) -> str:
+    try:
+        response = await send_request_to_plugin({"action": "get_playername", "uuid": user.player_id})
+        return response.player_name
+    except Exception as e:
+        return "Notch"
+        # raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/get-server-ip")
 async def reveal_ip():
