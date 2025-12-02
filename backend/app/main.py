@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.core import mc
-from app.routers import admin, cart, forums, login, register
+from app.routers import admin, cart, forums, login, register, user
 
 app = FastAPI(title="SurfNetwork API")
 
@@ -20,6 +20,7 @@ app.include_router(cart.router)
 app.include_router(forums.router)
 app.include_router(login.router)
 app.include_router(register.router)
+app.include_router(user.router)
 app.include_router(mc.router)
 
 app.mount("/public", StaticFiles(directory="public"), name="public")

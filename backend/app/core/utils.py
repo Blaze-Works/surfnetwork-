@@ -3,8 +3,7 @@
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 from app.core.mail import send_html_email
-from app.models.util_model import UserData
-from app.models.user_model import RegisterForm, LoginForm
+from app.models.user_model import UserData, RegisterForm, LoginForm
 from app.models.admin_models import AdminData, AdminRegisterForm, AdminLoginForm
 from app.core.db import db
 from datetime import datetime, date, timedelta
@@ -232,6 +231,7 @@ class User:
             id = self.uuid,
             username = self.username,
             email = self.email,
+            bio = self.bio,
             JD = self.JD,
             confirm_email = self.confirm_email
         )
@@ -360,6 +360,7 @@ class User:
         self.uuid = query[0].id
         self.username = user_data["username"]
         self.email = user_data["email"]
+        self.bio = user_data["bio"]
         self.psw = user_data["psw"]
         self.age = calculate_age(user_data["JD"])
         self.JD = user_data["JD"]
@@ -372,6 +373,7 @@ class User:
         self.uuid = userdata.id
         self.username = userdata.username
         self.email = userdata.email
+        self.bio = userdata.bio
         self.age = calculate_age(userdata.JD)
         self.JD = userdata.JD
         self.confirm_email = userdata.confirm_email
@@ -392,6 +394,7 @@ class User:
         
         self.username = user["username"]
         self.email = user["email"]
+        self.bio = user["bio"]
         self.psw = user["psw"]
         self.age = user["age"]
         self.JD = user["JD"]

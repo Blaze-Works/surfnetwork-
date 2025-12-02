@@ -1,6 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from app.core.utils import verify_admin
-from app.models.util_model import UserData
+from app.models.user_model import UserData
 import uuid
 import asyncio
 import json

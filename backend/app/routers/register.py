@@ -3,8 +3,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from app.core.utils import User
-from app.models.util_model import UserData
-from app.models.user_model import RegisterForm
+from app.models.user_model import UserData, RegisterForm
 from datetime import datetime
 
 router = APIRouter()
