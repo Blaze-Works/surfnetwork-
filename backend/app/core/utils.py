@@ -287,6 +287,7 @@ class User:
         self.JD = datetime.now()
         self.confirm_email = False
         self.sub = form.sub
+        self.bio = ""
 
         return self.add_user()
 
