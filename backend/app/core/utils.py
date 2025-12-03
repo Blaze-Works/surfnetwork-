@@ -233,7 +233,8 @@ class User:
             email = self.email,
             bio = self.bio,
             JD = self.JD,
-            confirm_email = self.confirm_email
+            confirm_email = self.confirm_email,
+            player_id = self.player_id
         )
 
     def update_db(self):
@@ -242,7 +243,7 @@ class User:
             "bio": self.bio,
             "age": self.age,
             "JD": self.JD,
-            "confirm_email": self.confirm_email,
+            "confirm_email": self.confirm_email
         }
 
         user = db.collection("users").document(self.uuid)
@@ -261,7 +262,8 @@ class User:
             "age": self.age,
             "JD": self.JD,
             "confirm_email": False,
-            "sub": self.sub
+            "sub": self.sub,
+            "player_id": "None"
         }
 
         try:
@@ -366,8 +368,8 @@ class User:
         self.psw = user_data["psw"]
         self.age = calculate_age(user_data["JD"])
         self.JD = user_data["JD"]
-        self.confirm_email = user_data["confirm_email"]
-        self.player_id = user_data["player_id"]
+        self.confirm_email = user_data["confirm_email"}
+        self.player_id = "None" if user_data.get("player_id") is None else user_data["player_id"]
 
         return self.fetch_userdata().model_dump()
 
@@ -379,7 +381,7 @@ class User:
         self.age = calculate_age(userdata.JD)
         self.JD = userdata.JD
         self.confirm_email = userdata.confirm_email
-        self.player_id = userdata.player_id
+        self.player_id = "None" if userdata.player_id is None else userdata.player_id
 
         if should_update:
             return self.update_db()
@@ -401,10 +403,7 @@ class User:
         self.age = user["age"]
         self.JD = user["JD"]
         self.confirm_email : bool = user["confirm_email"]
-        if user.get("player_id") is None:
-            self.player_id = ""
-        else:
-            self.player_id = user["player_id"]
+        self.player_id = "None" if user.get("player_id") is None else user["player_id"]
         
         return self.fetch_userdata()
 
