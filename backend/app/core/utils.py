@@ -368,7 +368,7 @@ class User:
         self.psw = user_data["psw"]
         self.age = calculate_age(user_data["JD"])
         self.JD = user_data["JD"]
-        self.confirm_email = user_data["confirm_email"}
+        self.confirm_email = user_data["confirm_email"]
         self.player_id = "None" if user_data.get("player_id") is None else user_data["player_id"]
 
         return self.fetch_userdata().model_dump()
