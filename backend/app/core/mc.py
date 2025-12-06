@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
-from app.core.utils import verify_admin
+from fastapi.responses import JSONResponse
+from app.core.utils import User, verify_admin
 from app.models.user_model import UserData
 import uuid
 import asyncio
@@ -95,8 +96,7 @@ async def get_playername(user: UserData) -> str:
         response = await send_request_to_plugin({"action": "get_playername", "uuid": user.player_id})
         return response.player_name
     except Exception as e:
-        return "Notch"
-        # raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/get-server-ip")
 async def reveal_ip():
@@ -209,7 +209,34 @@ async def get_mc_players(admin_id: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-        
+
+@router.get("/mc/get-player-info-as-admin", response_model=dict)
+async def get_mc_player_info_as_admin(admin_id: str, player_id: str):
+    if verify_admin(admin_id) is False:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    try:
+        response = await send_request_to_plugin({"action": "get_player_info_as_admin", "player": player})
+        return {"player_info": response}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+@router.get("/mc/get-player-info-as-user", response_model=dict)
+async def get_mc_player_info_as_user(user_id: str):
+    user = User()
+    user.fromUUID(user_id)
+    player = get_playerid(user.fetch_userdata())
+    if player == "None":
+        return {"player_info": {}}
+
+    try:
+        response = await send_request_to_plugin({"action": "get_player_info_as_user", "player": player})
+        return {"player_info": response}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
 @router.post("/mc/whitelist/get")
 async def get_mc_whitelist(admin_id: str):
     if verify_admin(admin_id) is False:

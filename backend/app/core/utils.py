@@ -222,6 +222,14 @@ def verify_admin(admin_id: str) -> bool:
     
     return False 
 
+def get_userid_by_email(email: str) -> str:
+    query = db.collection("users").where(field_path="email", op_string="==", value=email).get()
+    if not query:
+        raise HTTPException(status_code=404, detail={"error": "Invalid email, please register with this email"})
+
+    user_id = query[0].id
+    return user_id
+
 class User:
     def __init__(self):
         self.uuid = generate_uuid()
@@ -252,6 +260,19 @@ class User:
 
         user.update(user_data)
         return {"status": "success", "userdata": user_data}
+
+    def update_userdata(self, userdata: UserData):
+        user_data = {
+            "username": userdata.username,
+            "bio": userdata.bio,
+            "confirm_email": userdata.confirm_email,
+            "player_id": userdata.player_id
+        }
+        user = db.collection("users").document(self.uuid)
+        if not user.get().exists:
+            raise HTTPException(status_code=404, detail={"error": "Invalid user ID"})
+        user.update(user_data)
+        return True
 
     def add_user(self):
         user_data = {
@@ -458,7 +479,7 @@ class User:
             }
         ]
 
-        send_html_email(to_email=self.email, to_name=self.username, subject="Verify your email - SurfNetwork", html_content=html_content)
+        send_html_email(to_email=self.email, to_name=self.username, subject="Reset your password - SurfNetwork", html_content=html_content)
 
         user_reset_request = {
             "datetime": datetime.now(),
